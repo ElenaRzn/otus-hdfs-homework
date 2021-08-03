@@ -22,14 +22,20 @@ object HdfsService {
 
     if (targetFileName.isDefined) {
       val out = fs.create(new Path(s"$targetDirName/${targetFileName.get.getName}"))
-      files.foreach(file => {
-        val in = fs.open(file)
-        //не закрываем стримы руками, тк пишем все в один out
-        println("writing file")
-        IOUtils.copyBytes(in, out, conf, false)
-        in.close()
-      })
-      out.close()
+      try {
+        files.foreach(file => {
+          val in = fs.open(file)
+          // закрываем стримы руками, тк пишем все в один out
+          println("writing file")
+          try {
+            IOUtils.copyBytes(in, out, conf, false)
+          } finally {
+            in.close()
+          }
+        })
+      } finally {
+        out.close()
+      }
     }
 
     fs.delete(srcDir, true)
