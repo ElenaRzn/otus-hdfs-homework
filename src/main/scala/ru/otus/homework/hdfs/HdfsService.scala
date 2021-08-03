@@ -4,8 +4,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.IOUtils
 
-import scala.util.{Failure, Try}
-
 object HdfsService {
 
   def listDirs(root: Path)(implicit fs: FileSystem): Array[Path] =
@@ -18,7 +16,7 @@ object HdfsService {
 
   def copyMergeFiles(srcDir: Path, dstDirName: String, conf: Configuration)(implicit fs: FileSystem): Boolean = {
     //предполагаю, что файлы Mac OS - случайные
-    val files = fs.listStatus(srcDir).filter(_.isFile).map(_.getPath).filterNot(_.getName == ".DS_Store").filterNot(_.getName.contains(".inprogress"))
+    val files = fs.listStatus(srcDir).filter(_.isFile).map(_.getPath).filterNot(_.getName == ".DS_Store")
     val targetFileName = if (files.nonEmpty) Some(files.minBy(_.getName)) else None
     val targetDirName = s"$dstDirName/${srcDir.getName}"
 
@@ -29,10 +27,8 @@ object HdfsService {
         //не закрываем стримы руками, тк пишем все в один out
         println("writing file")
         IOUtils.copyBytes(in, out, conf, false)
-//        Try(IOUtils.copyBytes(in, out, conf, false))
         in.close()
       })
-      //out.flush()
       out.close()
     }
 
